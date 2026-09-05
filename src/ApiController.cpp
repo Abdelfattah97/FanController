@@ -1,39 +1,11 @@
 #include <ESP8266WebServer.h>
 #include <Config.h>
-#include <Fan.h>
 #include <LittleFS.h>
 #include <ApiController.h>
-#include <Buzzer.h>
-#include <WifiManager.h>
-#include <Timer.h>
+#include <FanService.h>
 // =======================================================
 // WEB SERVER FUNCTIONS (unchanged)
 // =======================================================
-
-// =========================
-// Fan state → String
-// =========================
-
-const char *ApiController::getFanStateString()
-{
-
-    switch (fanState)
-    {
-
-    case STATE_SPEED1:
-        return "SPEED1";
-
-    case STATE_SPEED2:
-        return "SPEED2";
-
-    case STATE_SPEED3:
-        return "SPEED3";
-
-    case STATE_OFF:
-    default:
-        return "OFF";
-    }
-}
 
 // =========================
 // GET /api/status
@@ -41,27 +13,10 @@ const char *ApiController::getFanStateString()
 
 void ApiController::handleFanStatus()
 {
-
-    String json = "{";
-
-    json += "\"state\":\"";
-    json += getFanStateString();
-    json += "\"";
-
-    json += ",\"mute\":";
-    json += isMuted ? "true" : "false";
-
-    json += ",\"timer\":";
-    json += Timer::isFanOffTimerActive()
-                ? String(Timer::getRemainingFanOffMins())
-                : "null";
-
-    json += "}";
-
     server.send(
         200,
         "application/json",
-        json);
+        fanService.getStatusJson());
 }
 
 // =========================
@@ -71,7 +26,7 @@ void ApiController::handleFanStatus()
 void ApiController::handleFanOff()
 {
 
-    Fan::switchState(STATE_OFF);
+    fanService.setFanState(STATE_OFF);
 
     handleFanStatus();
 }
@@ -83,7 +38,7 @@ void ApiController::handleFanOff()
 void ApiController::handleFanSpeed1()
 {
 
-    Fan::switchState(STATE_SPEED1);
+    fanService.setFanState(STATE_SPEED1);
 
     handleFanStatus();
 }
@@ -95,7 +50,7 @@ void ApiController::handleFanSpeed1()
 void ApiController::handleFanSpeed2()
 {
 
-    Fan::switchState(STATE_SPEED2);
+    fanService.setFanState(STATE_SPEED2);
 
     handleFanStatus();
 }
@@ -107,7 +62,7 @@ void ApiController::handleFanSpeed2()
 void ApiController::handleFanSpeed3()
 {
 
-    Fan::switchState(STATE_SPEED3);
+    fanService.setFanState(STATE_SPEED3);
 
     handleFanStatus();
 }
@@ -119,7 +74,7 @@ void ApiController::handleFanSpeed3()
 void ApiController::handleBeepMute()
 {
 
-    Buzzer::mute(true);
+    fanService.mute(true);
 
     server.send(
         200,
@@ -134,7 +89,7 @@ void ApiController::handleBeepMute()
 void ApiController::handleBeepUnmute()
 {
 
-    Buzzer::mute(false);
+    fanService.mute(false);
 
     server.send(
         200,
@@ -149,7 +104,7 @@ void ApiController::handleBeepUnmute()
 void ApiController::handleWifiDisconnect()
 {
 
-    WifiManager::switchWifi(true);
+    fanService.setWifiEnabled(false);
 
     server.send(
         200,
@@ -159,20 +114,20 @@ void ApiController::handleWifiDisconnect()
 
 void ApiController::handleSetFanOffTimer(int mins)
 {
-    Timer::setFanOffTimer(mins);
+    fanService.setTimer(mins);
     server.send(
         200,
         "application/json",
-        getFanTimerJson());
+        fanService.getTimerStatusJson());
 }
 
 void ApiController::handleCancelFanOffTimer()
 {
-    Timer::cancelFanOffTimer();
+    fanService.cancelTimer();
     server.send(
         200,
         "application/json",
-        getFanTimerJson());
+        fanService.getTimerStatusJson());
 }
 
 #ifdef DEBUG_FEATURE
@@ -205,7 +160,7 @@ void ApiController::handleDebugPage()
 <script>
   var log = document.getElementById('log');
   var status = document.getElementById('status');
-  var ws = new WebSocket('ws://' + location.hostname + ':81/');
+    var ws = new WebSocket('ws://' + location.hostname + ':82/');
 
   ws.onopen = function() { status.textContent = 'connected'; };
   ws.onclose = function() { status.textContent = 'disconnected'; };
@@ -234,7 +189,7 @@ void ApiController::handleDebugPage()
 void ApiController::handleWificonnect()
 {
 
-    WifiManager::switchWifi(false);
+    fanService.setWifiEnabled(true);
 
     server.send(
         200,
@@ -340,17 +295,4 @@ void ApiController::handleNotFound()
         404,
         "text/plain",
         "404 - Not Found");
-}
-
-String ApiController::getFanTimerJson()
-{
-    String json = "{\"timer\":";
-
-    json += Timer::isFanOffTimerActive()
-                ? String(Timer::getRemainingFanOffMins())
-                : "null";
-
-    json += "}";
-
-    return json;
 }

@@ -14,6 +14,9 @@ This release corresponds to the latest commit, `008899e` (`Implemented Timer Fun
 - The timer turns the fan off automatically when the duration expires.
 - Added timer status and remaining-time display to the web interface.
 - Added API validation for missing or invalid timer durations.
+- Added a `FanService` application layer shared by the HTTP API and IR remote.
+- Added `StateBroadcaster` and `WebSocketManager` for realtime status updates.
+- Replaced periodic browser status polling with a status WebSocket on port 81.
 
 ## Features
 
@@ -44,6 +47,8 @@ FanController/
 |   |-- LittleFsServer.h     LittleFS initialization interface
 |   |-- RemoteControl.h      IR receiver and command handling interface
 |   |-- Secrets.h             Local Wi-Fi credentials (ignored by Git)
+|   |-- FanService.h          Application-level fan operations
+|   |-- StateBroadcaster.h    Application state output interface
 |   |-- Timer.h              Fan-off timer interface
 |   |-- WebServer.h           HTTP server and mDNS interface
 |   |-- WifiManager.h         Wi-Fi connection management interface
@@ -51,10 +56,13 @@ FanController/
 |   |-- ApiController.cpp     Web pages and REST API handlers
 |   |-- Buzzer.cpp            Buzzer output and mute state
 |   |-- Fan.cpp               Fan output pins and speed state
+|   |-- FanService.cpp        Application service coordination
 |   |-- LittleFsServer.cpp    LittleFS startup
 |   |-- RemoteControl.cpp     NEC IR decoding and command mapping
+|   |-- StateBroadcaster.cpp  State output coordination
 |   |-- Timer.cpp             Timer scheduling and expiration
 |   |-- WebServer.cpp         HTTP routes, mDNS, OTA, and request loop
+|   |-- WebSocketManager.cpp  WebSocket transport implementation
 |   |-- WifiManager.cpp       Wi-Fi connection and retry logic
 |   |-- main.cpp              Arduino setup and loop orchestration
 |-- data/                   LittleFS web files
@@ -95,6 +103,22 @@ minutes=30
 
 Timer requests with no `minutes` parameter or a value less than or equal to zero return HTTP 400.
 
+## Realtime Status Updates
+
+The browser connects to the status WebSocket at:
+
+```text
+ws://fan.local:81/
+```
+
+The WebSocket sends the same complete status shape as `GET /api/status`:
+
+```json
+{"state":"SPEED1","mute":false,"timer":30}
+```
+
+Fan, mute, and timer changes from either the web API or IR remote go through `FanService`. The service broadcasts the resulting state through `StateBroadcaster` and `WebSocketManager`.
+
 ## Configuration
 
 Before building, create or update `include/Secrets.h` with the local Wi-Fi credentials:
@@ -109,8 +133,8 @@ The `include/Secrets.h` file is excluded by `.gitignore` and should not be commi
 Update the hardware and remote settings in `include/Config.h`:
 
 - `IR_RECEIVE_PIN`
-- `SPEED1_PIN`, `SPEED2_PIN`, and `SPEED3_PIN`
-- `BEEP_PIN`
+- `SPEED1_PIN`, `SPEED2_PIN`, and `SPEED3_PIN` (Active-High)
+- `BEEP_PIN` (Active-High)
 - IR remote address and button command constants
 
 ## Requirements
@@ -186,4 +210,4 @@ Rebuild and upload the firmware. Then open:
 http://fan.local/debug
 ```
 
-The debug console uses a WebSocket on port 81 and reports decoded IR frames.
+The debug console uses a separate WebSocket on port 82 and reports decoded IR frames.

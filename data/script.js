@@ -88,11 +88,6 @@ const timerCancelButton =
 // Constants
 // =====================================================
 
-// Refresh fan status every 15 seconds
-
-const STATUS_REFRESH_INTERVAL = 15000;
-
-
 // =====================================================
 // Update fan state on screen
 // =====================================================
@@ -348,6 +343,56 @@ function updateLastUpdate() {
 
 
 // =====================================================
+// Apply complete status
+// =====================================================
+
+function applyStatus(data) {
+
+    updateFanState(data.state);
+    updateMuteState(data.mute);
+    updateTimerState(data.timer);
+    updateLastUpdate();
+}
+
+
+// =====================================================
+// Realtime status WebSocket
+// =====================================================
+
+let statusSocket;
+
+function connectStatusSocket() {
+
+    statusSocket = new WebSocket(
+        "ws://" + location.hostname + ":81/"
+    );
+
+    statusSocket.onopen = function () {
+        setOnline();
+    };
+
+    statusSocket.onmessage = function (event) {
+
+        try {
+            applyStatus(JSON.parse(event.data));
+            setOnline();
+        } catch (error) {
+            console.error("Invalid status message:", error);
+        }
+    };
+
+    statusSocket.onclose = function () {
+        setOffline();
+        setTimeout(connectStatusSocket, 2000);
+    };
+
+    statusSocket.onerror = function () {
+        statusSocket.close();
+    };
+}
+
+
+// =====================================================
 // Get current status
 // =====================================================
 
@@ -377,22 +422,8 @@ async function refreshStatus() {
             await response.json();
 
 
-        // API is the single source
-        // of truth for the UI
-
-        updateFanState(
-            data.state
-        );
-
-
-        updateMuteState(
-            data.mute
-        );
-
-
-        updateTimerState(
-            data.timer
-        );
+        // API is the single source of truth for the initial UI state.
+        applyStatus(data);
 
 
         setOnline();
@@ -448,10 +479,6 @@ async function setFanSpeed(speed) {
             );
         }
 
-
-        // Refresh complete state
-
-        await refreshStatus();
 
     }
 
@@ -526,10 +553,6 @@ async function toggleMute() {
             );
         }
 
-
-        // Refresh complete state
-
-        await refreshStatus();
 
     }
 
@@ -675,11 +698,6 @@ async function setFanOffTimer(minutes) {
         }
 
 
-        // Refresh complete state
-
-        await refreshStatus();
-
-
         // Clear custom input
 
         timerMinutesInput.value = "";
@@ -740,10 +758,6 @@ async function cancelFanOffTimer() {
         }
 
 
-        // Refresh complete state
-
-        await refreshStatus();
-
     }
 
     catch (error) {
@@ -767,17 +781,8 @@ async function cancelFanOffTimer() {
 
 
 // =====================================================
-// Automatic status refresh
-// =====================================================
-
-setInterval(
-    refreshStatus,
-    STATUS_REFRESH_INTERVAL
-);
-
-
-// =====================================================
 // Initial status
 // =====================================================
 
 refreshStatus();
+connectStatusSocket();

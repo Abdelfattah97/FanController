@@ -7,7 +7,8 @@
 #include <RemoteControl.h>
 #include <Fan.h>
 #include <Buzzer.h>
-#include <Timer.h>
+#include <FanService.h>
+#include <StateBroadcaster.h>
 
 #ifdef DEBUG_FEATURE
 #include <WebSocketsServer.h>
@@ -115,6 +116,9 @@ void setup()
   // WEB SERVER
   WebServer::setup();
 
+  // STATUS BROADCASTER
+  stateBroadcaster.setup();
+
   // =====================================================
   // DEBUG WEBSOCKET (debug build only)
   // =====================================================
@@ -122,7 +126,7 @@ void setup()
 #ifdef DEBUG_FEATURE
   debugWebSocket.begin();
   debugWebSocket.onEvent(onDebugWsEvent);
-  Serial.println("Debug WebSocket server started on port 81");
+  Serial.println("Debug WebSocket server started on port 82");
   Serial.println("Open http://<device-ip>/debug to view RF debug console");
 #endif
 }
@@ -139,9 +143,12 @@ void loop()
   // WEB SERVER
   WebServer::update();
 
+  // STATUS BROADCASTER
+  stateBroadcaster.loop();
+
   // IR
   RemoteControl::update();
 
-  // TIMER
-  Timer::update();
+  // APPLICATION SERVICE
+  fanService.update();
 }

@@ -1,10 +1,7 @@
 #include <RemoteControl.h>
 #include <IRremote.hpp>
 #include <Config.h>
-#include <Fan.h>
-#include <Buzzer.h>
-#include <WifiManager.h>
-
+#include <FanService.h>
 
 void RemoteControl::setup()
 {
@@ -74,39 +71,37 @@ void RemoteControl::handleCommand(uint8_t &command)
     {
         Serial.println("BUTTON OFF");
 
-        Fan::switchState(STATE_OFF);
+        fanService.setFanState(STATE_OFF);
     }
     else if (command == BUTTON_1)
     {
         Serial.println("BUTTON 1");
 
-        Fan::switchState(STATE_SPEED1);
+        fanService.setFanState(STATE_SPEED1);
     }
     else if (command == BUTTON_2)
     {
 
         Serial.println("BUTTON 2");
 
-        Fan::switchState(STATE_SPEED2);
+        fanService.setFanState(STATE_SPEED2);
     }
     else if (command == BUTTON_3)
     {
         Serial.println("BUTTON 3");
 
-        Fan::switchState(STATE_SPEED3);
+        fanService.setFanState(STATE_SPEED3);
     }
     else if (command == BUTTON_WIFI_SWITCH)
     {
 
         Serial.println("Switch Wifi");
-        bool flag = !stopWifi;
-        WifiManager::switchWifi(flag);
+        fanService.toggleWifi();
     }
     else if (command == BUTTON_MUTE_SWITCH)
     {
         Serial.println("Switch Mute");
-        bool flag = !isMuted;
-        Buzzer::mute(flag);
+        fanService.toggleMute();
     }
     else
     {

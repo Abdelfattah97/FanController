@@ -17,8 +17,4 @@ public:
     static void handleSetFanOffTimer(int mins);
     static void handleCancelFanOffTimer();
     static void handleDebugPage();
-
-private:
-    static const char *getFanStateString();
-    static String getFanTimerJson();
 };
