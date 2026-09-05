@@ -16,5 +16,8 @@ public:
     static void handleWifiDisconnect();
     static void handleSetFanOffTimer(int mins);
     static void handleCancelFanOffTimer();
-    static void handleDebugPage();
+#ifdef DEBUG_FEATURE
+    static void handleDebugIrPage();
+    static void handleDebugConsolePage();
+#endif
 };

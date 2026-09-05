@@ -374,8 +374,12 @@ function connectStatusSocket() {
     statusSocket.onmessage = function (event) {
 
         try {
-            applyStatus(JSON.parse(event.data));
-            setOnline();
+            const message = JSON.parse(event.data);
+
+            if (message.type === "status") {
+                applyStatus(message.data);
+                setOnline();
+            }
         } catch (error) {
             console.error("Invalid status message:", error);
         }

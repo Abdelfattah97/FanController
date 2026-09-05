@@ -111,7 +111,7 @@ const char *FanService::getFanStateString() const
 
 void FanService::broadcastStatus()
 {
-    stateBroadcaster.broadcast(getStatusJson());
+    stateBroadcaster.broadcastStatus(getStatusJson());
 }
 
 FanService fanService(stateBroadcaster);

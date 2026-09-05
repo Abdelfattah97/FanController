@@ -2,6 +2,7 @@
 #include <IRremote.hpp>
 #include <Config.h>
 #include <FanService.h>
+#include <Debug.h>
 
 void RemoteControl::setup()
 {
@@ -13,11 +14,11 @@ void RemoteControl::setup()
         IR_RECEIVE_PIN,
         ENABLE_LED_FEEDBACK);
 
-    Serial.println();
-    Serial.println("==============================");
-    Serial.println("       FAN REMOTE");
-    Serial.println("==============================");
-    Serial.println("Waiting for remote...");
+    debugPrintln();
+    debugPrintln("==============================");
+    debugPrintln("       FAN REMOTE");
+    debugPrintln("==============================");
+    debugPrintln("Waiting for remote...");
 }
 
 void RemoteControl::update()
@@ -41,17 +42,16 @@ void RemoteControl::update()
             // Compiles to nothing in production.
             // =========================
 
-#ifdef DEBUG_FEATURE
-            debugRF();
-#endif
             uint16_t address = IrReceiver.decodedIRData.address;
             uint8_t command = IrReceiver.decodedIRData.command;
+            bool accepted = IrReceiver.decodedIRData.protocol == NEC && address == REMOTE_ADDRESS;
+            debugRemoteCommand(address, command, accepted);
 
             // =========================
             // Check remote
             // =========================
 
-            if (IrReceiver.decodedIRData.protocol == NEC && address == REMOTE_ADDRESS)
+            if (accepted)
             {
 
                 handleCommand(command);
@@ -69,43 +69,43 @@ void RemoteControl::handleCommand(uint8_t &command)
 {
     if (command == BUTTON_OFF)
     {
-        Serial.println("BUTTON OFF");
+        debugPrintln("BUTTON OFF");
 
         fanService.setFanState(STATE_OFF);
     }
     else if (command == BUTTON_1)
     {
-        Serial.println("BUTTON 1");
+        debugPrintln("BUTTON 1");
 
         fanService.setFanState(STATE_SPEED1);
     }
     else if (command == BUTTON_2)
     {
 
-        Serial.println("BUTTON 2");
+        debugPrintln("BUTTON 2");
 
         fanService.setFanState(STATE_SPEED2);
     }
     else if (command == BUTTON_3)
     {
-        Serial.println("BUTTON 3");
+        debugPrintln("BUTTON 3");
 
         fanService.setFanState(STATE_SPEED3);
     }
     else if (command == BUTTON_WIFI_SWITCH)
     {
 
-        Serial.println("Switch Wifi");
+        debugPrintln("Switch Wifi");
         fanService.toggleWifi();
     }
     else if (command == BUTTON_MUTE_SWITCH)
     {
-        Serial.println("Switch Mute");
+        debugPrintln("Switch Mute");
         fanService.toggleMute();
     }
     else
     {
 
-        Serial.println("Unknown command from our remote");
+        debugPrintln("Unknown command from our remote");
     }
 }

@@ -43,6 +43,7 @@ FanController/
 |   |-- ApiController.h      HTTP route handler declarations
 |   |-- Buzzer.h             Buzzer control interface
 |   |-- Config.h             Pins, remote commands, constants, and globals
+|   |-- Debug.h              Compile-time debug logging interface
 |   |-- Fan.h                Fan state and output control interface
 |   |-- LittleFsServer.h     LittleFS initialization interface
 |   |-- RemoteControl.h      IR receiver and command handling interface
@@ -55,6 +56,7 @@ FanController/
 |-- src/                    C++ implementations
 |   |-- ApiController.cpp     Web pages and REST API handlers
 |   |-- Buzzer.cpp            Buzzer output and mute state
+|   |-- Debug.cpp             Serial and WebSocket debug output
 |   |-- Fan.cpp               Fan output pins and speed state
 |   |-- FanService.cpp        Application service coordination
 |   |-- LittleFsServer.cpp    LittleFS startup
@@ -67,6 +69,8 @@ FanController/
 |   |-- main.cpp              Arduino setup and loop orchestration
 |-- data/                   LittleFS web files
 |   |-- index.html            Fan control interface
+|   |-- debug-ir.html         IR command debug page
+|   |-- debug-console.html    Debug message console page
 |   |-- script.js             Browser controls and API calls
 |   |-- style.css             Web interface styles
 |-- lib/                    Project-local libraries
@@ -111,13 +115,15 @@ The browser connects to the status WebSocket at:
 ws://fan.local:81/
 ```
 
-The WebSocket sends the same complete status shape as `GET /api/status`:
+The WebSocket sends a typed status envelope containing the same complete state as `GET /api/status`:
 
 ```json
-{"state":"SPEED1","mute":false,"timer":30}
+{ "type": "status", "data": { "state": "SPEED1", "mute": false, "timer": 30 } }
 ```
 
 Fan, mute, and timer changes from either the web API or IR remote go through `FanService`. The service broadcasts the resulting state through `StateBroadcaster` and `WebSocketManager`.
+
+The same WebSocket also carries typed debug messages when `DEBUG_FEATURE` is enabled. Status messages use `type: "status"`; debug messages use `type: "debug"` with either the `ir` or `log` channel.
 
 ## Configuration
 
@@ -196,18 +202,19 @@ Upload both firmware and filesystem as needed. The board must be connected and t
 
 The web server is available only while Wi-Fi is connected. The IR remote remains available through the hardware receiver.
 
-## Optional Debug Console
+## Optional Debug Pages
 
-To enable the IR debug console, add this build flag to the `nodemcuv2` environment in `platformio.ini`:
+To enable the debug pages and global debug logger, add this build flag to the `nodemcuv2` environment in `platformio.ini`:
 
 ```ini
 build_flags = -D DEBUG_FEATURE
 ```
 
-Rebuild and upload the firmware. Then open:
+Rebuild and upload the firmware. The pages use the shared WebSocket on port `81`:
 
 ```text
-http://fan.local/debug
+http://fan.local/debug/ir
+http://fan.local/debug/console
 ```
 
-The debug console uses a separate WebSocket on port 82 and reports decoded IR frames.
+The IR page receives decoded remote commands. The console page receives project debug messages. Without `DEBUG_FEATURE`, the global debug print functions compile to no-ops and the debug routes are not included.

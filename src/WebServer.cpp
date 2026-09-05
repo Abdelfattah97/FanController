@@ -3,6 +3,7 @@
 #include <ApiController.h>
 #include <WebServer.h>
 #include <ESP8266mDNS.h>
+#include <Debug.h>
 
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
@@ -12,6 +13,7 @@ void WebServer::setup()
     setupWebServer();
     setupMDNS();
 }
+#include <Debug.h>
 
 void WebServer::update()
 {
@@ -20,10 +22,7 @@ void WebServer::update()
         MDNS.update();
         server.handleClient();
 
-// TODO: Move to Debug
-#ifdef DEBUG_FEATURE
-        debugWebSocket.loop();
-#endif
+        // TODO: Move to Debug
     }
 }
 // Setup WEB SERVER
@@ -32,15 +31,15 @@ void WebServer::setupMDNS()
     if (MDNS.begin("fan"))
     {
 
-        Serial.println("mDNS started!");
-        Serial.println("Open: http://fan.local");
+        debugPrintln("mDNS started!");
+        debugPrintln("Open: http://fan.local");
 
         MDNS.addService("http", "tcp", 80);
     }
     else
     {
 
-        Serial.println("mDNS failed!");
+        debugPrintln("mDNS failed!");
     }
 }
 // SETUP WEB SERVER
@@ -159,9 +158,14 @@ void WebServer::setupWebServer()
 
 #ifdef DEBUG_FEATURE
     server.on(
-        "/debug",
+        "/debug/ir",
         HTTP_GET,
-        ApiController::handleDebugPage);
+        ApiController::handleDebugIrPage);
+
+    server.on(
+        "/debug/console",
+        HTTP_GET,
+        ApiController::handleDebugConsolePage);
 #endif
 
     // =========================
@@ -179,5 +183,5 @@ void WebServer::setupWebServer()
 
     server.begin();
 
-    Serial.println("Web server started");
+    debugPrintln("Web server started");
 }

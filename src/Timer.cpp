@@ -1,6 +1,7 @@
 #include "Timer.h"
 #include <Fan.h>
 #include <Config.h>
+#include <Debug.h>
 
 namespace
 {
@@ -15,6 +16,7 @@ namespace
 void Timer::update()
 {
     if (!fanOffTimerActive)
+#include <Debug.h>
         return;
 
     // Timer expired
@@ -50,9 +52,9 @@ void Timer::setFanOffTimer(unsigned int afterMins)
         Fan::switchState(STATE_SPEED1);
     }
 
-    Serial.print("Fan off timer set for ");
-    Serial.print(afterMins);
-    Serial.println(" minutes.");
+    debugPrint("Fan off timer set for ");
+    debugPrint(static_cast<int>(afterMins));
+    debugPrintln(" minutes.");
 }
 
 // =====================================================
@@ -63,7 +65,7 @@ void Timer::cancelFanOffTimer()
 {
     fanOffTimerActive = false;
 
-    Serial.println("Fan off timer canceled.");
+    debugPrintln("Fan off timer canceled.");
 }
 
 // =====================================================

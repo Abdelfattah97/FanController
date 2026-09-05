@@ -1,6 +1,7 @@
 #include "Fan.h"
 #include <Config.h>
 #include <Buzzer.h>
+#include <Debug.h>
 
 // =========================
 // Current fan state
@@ -29,7 +30,7 @@ void Fan::switchState(int state)
     if (state < STATE_OFF || state > STATE_SPEED3)
     {
 
-        Serial.println("Invalid fan state!");
+        debugPrintln("Invalid fan state!");
 
         return;
     }
@@ -56,6 +57,7 @@ void Fan::switchState(int state)
     // If state has an associated pin,
     // turn it ON
     if (pin != 0)
+#include <Debug.h>
     {
 
         digitalWrite(pin, HIGH);
@@ -68,25 +70,25 @@ void Fan::switchState(int state)
     // Debug information
     // =========================
 
-    Serial.print("Fan state: ");
+    debugPrint("Fan state: ");
 
     switch (fanState)
     {
 
     case STATE_OFF:
-        Serial.println("OFF");
+        debugPrintln("OFF");
         break;
 
     case STATE_SPEED1:
-        Serial.println("SPEED 1");
+        debugPrintln("SPEED 1");
         break;
 
     case STATE_SPEED2:
-        Serial.println("SPEED 2");
+        debugPrintln("SPEED 2");
         break;
 
     case STATE_SPEED3:
-        Serial.println("SPEED 3");
+        debugPrintln("SPEED 3");
         break;
     }
 }

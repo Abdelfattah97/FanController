@@ -132,55 +132,32 @@ void ApiController::handleCancelFanOffTimer()
 
 #ifdef DEBUG_FEATURE
 
-void ApiController::handleDebugPage()
+void ApiController::handleDebugIrPage()
 {
+    if (!LittleFS.exists("/debug-ir.html"))
+    {
+        server.send(404, "text/plain", "debug-ir.html not found");
+        return;
+    }
 
-    // Small, self-contained debug page. Embedded in PROGMEM rather
-    // than LittleFS because the production index.html/script.js/
-    // style.css are not touched by this feature at all.
-    const char DEBUG_HTML[] = R"HTMLPAGE(
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>RF Debug Console</title>
-<style>
-  body { font-family: monospace; background:#111; color:#0f0; margin:0; padding:1em; }
-  h2 { color:#fff; margin-top:0; }
-  #log { white-space: pre-wrap; border:1px solid #333; padding:0.5em; height:70vh; overflow-y:auto; background:#000; }
-  button { background:#222; color:#0f0; border:1px solid #0f0; padding:0.4em 1em; cursor:pointer; margin-bottom:0.5em; }
-  #status { color:#888; font-size:0.85em; margin-bottom:0.5em; }
-</style>
-</head>
-<body>
-<h2>RF Debug Console</h2>
-<div id="status">connecting...</div>
-<button onclick="clearLog()">Clear</button>
-<div id="log"></div>
-<script>
-  var log = document.getElementById('log');
-  var status = document.getElementById('status');
-    var ws = new WebSocket('ws://' + location.hostname + ':82/');
-
-  ws.onopen = function() { status.textContent = 'connected'; };
-  ws.onclose = function() { status.textContent = 'disconnected'; };
-  ws.onerror = function() { status.textContent = 'error'; };
-
-  ws.onmessage = function(evt) {
-    log.textContent += evt.data + "\n--------------------------------\n";
-    log.scrollTop = log.scrollHeight;
-  };
-
-  function clearLog() {
-    log.textContent = '';
-  }
-</script>
-</body>
-</html>
-)HTMLPAGE";
-
-    server.send_P(200, "text/html", DEBUG_HTML);
+    File file = LittleFS.open("/debug-ir.html", "r");
+    server.streamFile(file, "text/html");
+    file.close();
 }
+
+void ApiController::handleDebugConsolePage()
+{
+    if (!LittleFS.exists("/debug-console.html"))
+    {
+        server.send(404, "text/plain", "debug-console.html not found");
+        return;
+    }
+
+    File file = LittleFS.open("/debug-console.html", "r");
+    server.streamFile(file, "text/html");
+    file.close();
+}
+
 #endif
 // =========================
 // POST /api/wifi/connect

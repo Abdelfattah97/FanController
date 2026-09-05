@@ -1,7 +1,9 @@
 #include <Config.h>
 #include <ESP8266mDNS.h>
 #include <WifiManager.h>
+#include <Debug.h>
 #include <Buzzer.h>
+#include <Debug.h>
 
 bool stopWifi = false;
 bool wifiConnected = false;
@@ -39,7 +41,7 @@ bool WifiManager::connectWiFi()
     if (!wifiConnecting)
     {
 
-        Serial.println("Connecting to Wi-Fi...");
+        debugPrintln("Connecting to Wi-Fi...");
 
         WiFi.mode(WIFI_STA);
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -60,10 +62,10 @@ bool WifiManager::connectWiFi()
         wifiConnecting = false;
         wifiConnected = true;
 
-        Serial.println("Wi-Fi connected!");
+        debugPrintln("Wi-Fi connected!");
 
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
+        debugPrint("IP address: ");
+        debugPrintln(WiFi.localIP().toString());
 
         return true;
     }
@@ -77,7 +79,7 @@ bool WifiManager::connectWiFi()
 
         wifiConnecting = false;
 
-        Serial.println("Wi-Fi connection failed.");
+        debugPrintln("Wi-Fi connection failed.");
 
         WiFi.disconnect();
         lastWiFiAttempt = now;

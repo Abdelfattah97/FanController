@@ -1,5 +1,6 @@
 #include <LittleFS.h>
 #include <LittleFsServer.h>
+#include <Debug.h>
 
 void LittleFsServer::setup()
 {
@@ -7,16 +8,16 @@ void LittleFsServer::setup()
     // LITTLEFS
     // =====================================================
 
-    Serial.println();
-    Serial.println("Initializing LittleFS...");
+    debugPrintln();
+    debugPrintln("Initializing LittleFS...");
 
     if (!LittleFS.begin())
     {
 
-        Serial.println("LittleFS initialization failed!");
+        debugPrintln("LittleFS initialization failed!");
     }
     else
     {
-        Serial.println("LittleFS initialized");
+        debugPrintln("LittleFS initialized");
     }
 }

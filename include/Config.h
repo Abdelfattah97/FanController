@@ -81,13 +81,3 @@ extern unsigned long lastWiFiAttempt;
 
 // Web server
 extern ESP8266WebServer server;
-
-// =========================
-// Debug WebSocket server (RF debug console)
-// Only exists in the debug build. Runs on its own port (82)
-// so it cannot collide with the port-80 HTTP server or OTA.
-// =========================
-
-#ifdef DEBUG_FEATURE
-WebSocketsServer debugWebSocket(82);
-#endif

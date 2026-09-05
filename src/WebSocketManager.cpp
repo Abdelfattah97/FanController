@@ -1,4 +1,5 @@
 #include "WebSocketManager.h"
+#include <Debug.h>
 
 WebSocketManager::WebSocketManager()
     : webSocket(81)
@@ -10,7 +11,7 @@ void WebSocketManager::setup()
     webSocket.begin();
     webSocket.onEvent(onWebSocketEvent);
 
-    Serial.println("WebSocket server started.");
+    debugPrintln("WebSocket server started.");
 }
 
 void WebSocketManager::loop()
@@ -33,13 +34,13 @@ void WebSocketManager::onWebSocketEvent(
     switch (type)
     {
     case WStype_CONNECTED:
-        Serial.printf(
+        debugPrintf(
             "WebSocket client %u connected.\n",
             clientId);
         break;
 
     case WStype_DISCONNECTED:
-        Serial.printf(
+        debugPrintf(
             "WebSocket client %u disconnected.\n",
             clientId);
         break;
