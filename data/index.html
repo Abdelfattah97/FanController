@@ -1,0 +1,253 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="theme-color" content="#111827" />
+
+    <title>Fan Control</title>
+
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+
+  <body>
+    <main class="app">
+      <!-- =========================
+             Header
+        ========================== -->
+
+      <header class="header">
+        <div class="title-section">
+          <div class="fan-logo">🌀</div>
+
+          <div>
+            <h1>Fan Control</h1>
+
+            <p>
+              Developed by
+              <strong> Abdelfattah Mok </strong>
+            </p>
+          </div>
+        </div>
+
+        <div id="connectionStatus" class="connection-status">
+          <span id="connectionDot" class="connection-dot"></span>
+
+          <span id="connectionText"> Connecting </span>
+        </div>
+      </header>
+
+      <!-- =========================
+             Current state
+        ========================== -->
+
+      <section class="status-card">
+        <div class="status-label">CURRENT SPEED</div>
+
+        <div id="fanState" class="fan-state">OFF</div>
+
+        <div id="statusDescription" class="status-description">
+          Fan is turned off
+        </div>
+      </section>
+
+      <!-- =========================
+             Controls
+        ========================== -->
+
+      <section class="controls">
+        <!-- Speed 1 -->
+
+        <button
+          class="control-button"
+          data-state="SPEED1"
+          onclick="setFanSpeed('speed1')"
+        >
+          <span class="button-title"> LOW </span>
+
+          <span class="button-description"> Speed 1 </span>
+        </button>
+
+        <!-- Speed 2 -->
+
+        <button
+          class="control-button"
+          data-state="SPEED2"
+          onclick="setFanSpeed('speed2')"
+        >
+          <span class="button-title"> MEDIUM </span>
+
+          <span class="button-description"> Speed 2 </span>
+        </button>
+
+        <!-- Speed 3 -->
+
+        <button
+          class="control-button"
+          data-state="SPEED3"
+          onclick="setFanSpeed('speed3')"
+        >
+          <span class="button-title"> HIGH </span>
+
+          <span class="button-description"> Speed 3 </span>
+        </button>
+
+        <!-- Off -->
+
+        <button
+          class="control-button off-button"
+          data-state="OFF"
+          onclick="setFanSpeed('off')"
+        >
+          <span class="button-title"> OFF </span>
+
+          <span class="button-description"> Turn fan off </span>
+        </button>
+
+        <!-- =========================
+                 Sound control
+            ========================== -->
+
+        <button
+          class="sound-button"
+          id="muteButton"
+          onclick="toggleMute()"
+          aria-label="Toggle sound"
+        >
+          <span class="sound-icon" id="muteIcon"> 🔊 </span>
+        </button>
+
+        <!-- =========================
+                 Timer control
+            ========================== -->
+
+        <button
+          class="timer-button"
+          id="timerButton"
+          onclick="toggleTimerPanel()"
+          aria-label="Fan timer"
+          aria-expanded="false"
+        >
+          <span class="timer-icon"> ⏱️ </span>
+
+          <span class="timer-value" id="timerValue"> --:-- </span>
+        </button>
+
+        <!-- =========================
+                 Timer expansion panel
+            ========================== -->
+
+        <div class="timer-panel" id="timerPanel">
+          <div class="timer-panel-content">
+            <!-- Panel title -->
+
+            <div class="timer-panel-header">
+              <div>
+                <div class="timer-panel-title">Fan Timer</div>
+
+                <div class="timer-panel-description" id="timerPanelDescription">
+                  Set when the fan should turn off
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick presets -->
+
+            <div class="timer-presets" id="timerPresets">
+              <button
+                type="button"
+                class="timer-preset"
+                onclick="setFanOffTimer(15)"
+              >
+                15 min
+              </button>
+
+              <button
+                type="button"
+                class="timer-preset"
+                onclick="setFanOffTimer(30)"
+              >
+                30 min
+              </button>
+
+              <button
+                type="button"
+                class="timer-preset"
+                onclick="setFanOffTimer(60)"
+              >
+                1 hr
+              </button>
+
+              <button
+                type="button"
+                class="timer-preset"
+                onclick="setFanOffTimer(120)"
+              >
+                2 hr
+              </button>
+            </div>
+
+            <!-- Custom timer -->
+
+            <div class="timer-custom" id="timerCustom">
+              <label for="timerMinutes" class="timer-input-label">
+                Custom duration
+              </label>
+
+              <div class="timer-input-row">
+                <input
+                  id="timerMinutes"
+                  class="timer-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="Minutes"
+                />
+
+                <button
+                  type="button"
+                  class="timer-set-button"
+                  onclick="setCustomTimer()"
+                >
+                  Set Timer
+                </button>
+              </div>
+            </div>
+
+            <!-- Active timer actions -->
+
+            <div class="timer-active" id="timerActive">
+              <div class="timer-active-text" id="timerActiveText">
+                Timer is active
+              </div>
+
+              <button
+                type="button"
+                class="timer-cancel-button"
+                onclick="cancelFanOffTimer()"
+              >
+                Cancel Timer
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================
+             Last update
+        ========================== -->
+
+      <footer class="footer">
+        <span> Last update </span>
+
+        <span id="lastUpdate" class="last-update"> Never </span>
+      </footer>
+    </main>
+
+    <script src="/script.js"></script>
+  </body>
+</html>

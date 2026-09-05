@@ -1,0 +1,859 @@
+/* =====================================================
+   General
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html {
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    background: #f3f4f6;
+    color: #111827;
+
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+
+/* =====================================================
+   Main application
+===================================================== */
+
+.app {
+    width: 100%;
+    max-width: 480px;
+
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding: 20px 16px 24px;
+}
+
+
+/* =====================================================
+   Header
+===================================================== */
+
+.header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 24px;
+}
+
+
+.title-section {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.fan-logo {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #111827;
+
+    font-size: 23px;
+}
+
+
+.header h1 {
+    margin: 0;
+
+    font-size: 21px;
+    line-height: 1.2;
+}
+
+
+.header p {
+    margin: 3px 0 0;
+
+    color: #6b7280;
+
+    font-size: 12px;
+}
+
+
+/* =====================================================
+   Connection status
+===================================================== */
+
+.connection-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px 10px;
+
+    border-radius: 20px;
+
+    background: #e5e7eb;
+
+    color: #4b5563;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.connection-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #9ca3af;
+}
+
+
+/* Online */
+
+.connection-status.online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+
+.connection-status.online .connection-dot {
+    background: #22c55e;
+}
+
+
+/* Offline */
+
+.connection-status.offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+.connection-status.offline .connection-dot {
+    background: #ef4444;
+}
+
+
+/* =====================================================
+   Status card
+===================================================== */
+
+.status-card {
+    background: white;
+
+    border-radius: 24px;
+
+    padding: 32px 20px;
+
+    text-align: center;
+
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+
+.status-label {
+    color: #6b7280;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.2px;
+}
+
+
+.fan-state {
+    margin-top: 8px;
+
+    font-size: 36px;
+
+    line-height: 1.1;
+
+    font-weight: 800;
+}
+
+
+.status-description {
+    margin-top: 8px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   Controls
+===================================================== */
+
+.controls {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+
+/* =====================================================
+   Fan control buttons
+===================================================== */
+
+.control-button {
+    min-height: 110px;
+
+    border: none;
+
+    border-radius: 20px;
+
+    padding: 16px 10px;
+
+    background: white;
+
+    color: #111827;
+
+    box-shadow:
+        0 3px 14px rgba(0, 0, 0, 0.06);
+
+    cursor: pointer;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    touch-action: manipulation;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease,
+        background 0.15s ease;
+}
+
+
+.control-button:active {
+    transform: scale(0.96);
+
+    box-shadow:
+        0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+
+.control-button.active {
+    background: #111827;
+
+    color: white;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.15);
+}
+
+
+.button-title {
+    display: block;
+
+    font-size: 17px;
+
+    font-weight: 800;
+}
+
+
+.button-description {
+    display: block;
+
+    margin-top: 6px;
+
+    font-size: 11px;
+
+    color: #6b7280;
+}
+
+
+.control-button.active .button-description {
+    color: #d1d5db;
+}
+
+
+/* =====================================================
+   OFF button
+===================================================== */
+
+.off-button {
+    background: #e5e7eb;
+}
+
+
+.off-button.active {
+    background: #111827;
+
+    color: white;
+}
+
+
+/* =====================================================
+   Disabled state
+===================================================== */
+
+.control-button:disabled {
+    opacity: 0.55;
+
+    cursor: wait;
+
+    transform: none;
+}
+
+
+/* =====================================================
+   Sound + Timer buttons
+===================================================== */
+
+.sound-button,
+.timer-button {
+    min-height: 72px;
+
+    border: none;
+
+    border-radius: 18px;
+
+    padding: 12px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: white;
+
+    color: #111827;
+
+    box-shadow:
+        0 3px 14px rgba(0, 0, 0, 0.06);
+
+    cursor: pointer;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    touch-action: manipulation;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease,
+        background 0.15s ease;
+}
+
+
+.sound-button:active,
+.timer-button:active {
+    transform: scale(0.96);
+
+    box-shadow:
+        0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+
+.sound-button:disabled,
+.timer-button:disabled {
+    opacity: 0.55;
+
+    cursor: wait;
+
+    transform: none;
+}
+
+
+/* =====================================================
+   Sound icon + Timer icon
+===================================================== */
+
+.sound-icon,
+.timer-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #f3f4f6;
+
+    font-size: 21px;
+}
+
+
+/* =====================================================
+   Timer button
+===================================================== */
+
+.timer-button {
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.timer-value {
+    font-size: 15px;
+
+    font-weight: 800;
+
+    line-height: 1;
+
+    color: #111827;
+}
+
+
+/* Active timer */
+
+.timer-button.active {
+    background: #111827;
+
+    color: white;
+}
+
+
+.timer-button.active .timer-icon {
+    background: #374151;
+}
+
+
+.timer-button.active .timer-value {
+    color: white;
+}
+
+
+/* =====================================================
+   Muted sound button
+===================================================== */
+
+.sound-button.muted {
+    background: #111827;
+
+    color: white;
+}
+
+
+.sound-button.muted .sound-icon {
+    background: #374151;
+}
+
+
+/* =====================================================
+   Timer expansion panel
+===================================================== */
+
+.timer-panel {
+    grid-column: 1 / -1;
+
+    max-height: 0;
+
+    overflow: hidden;
+
+    opacity: 0;
+
+    transform: translateY(-6px);
+
+    pointer-events: none;
+
+    transition:
+        max-height 0.25s ease,
+        opacity 0.2s ease,
+        transform 0.25s ease;
+}
+
+
+.timer-panel.open {
+    max-height: 300px;
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+    pointer-events: auto;
+}
+
+
+.timer-panel-content {
+    margin-top: 0;
+
+    padding: 18px;
+
+    background: white;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 3px 14px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =====================================================
+   Timer panel header
+===================================================== */
+
+.timer-panel-header {
+    margin-bottom: 16px;
+}
+
+
+.timer-panel-title {
+    font-size: 15px;
+
+    font-weight: 800;
+}
+
+
+.timer-panel-description {
+    margin-top: 4px;
+
+    color: #6b7280;
+
+    font-size: 12px;
+
+    line-height: 1.4;
+}
+
+
+/* =====================================================
+   Timer presets
+===================================================== */
+
+.timer-presets {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 8px;
+}
+
+
+.timer-preset {
+    min-height: 42px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #f3f4f6;
+
+    color: #111827;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+    transition:
+        background 0.15s ease,
+        transform 0.1s ease;
+}
+
+
+.timer-preset:active {
+    transform: scale(0.95);
+}
+
+
+.timer-preset:hover {
+    background: #e5e7eb;
+}
+
+
+/* =====================================================
+   Custom timer
+===================================================== */
+
+.timer-custom {
+    margin-top: 16px;
+}
+
+
+.timer-input-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+
+    font-weight: 600;
+}
+
+
+.timer-input-row {
+    display: flex;
+
+    gap: 8px;
+}
+
+
+.timer-input {
+    min-width: 0;
+
+    flex: 1;
+
+    height: 42px;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    padding: 0 12px;
+
+    background: #f9fafb;
+
+    color: #111827;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    outline: none;
+}
+
+
+.timer-input:focus {
+    border-color: #9ca3af;
+
+    background: white;
+}
+
+
+.timer-set-button {
+    height: 42px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    padding: 0 15px;
+
+    background: #111827;
+
+    color: white;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+    transition:
+        transform 0.1s ease,
+        background 0.15s ease;
+}
+
+
+.timer-set-button:active {
+    transform: scale(0.96);
+}
+
+
+.timer-set-button:disabled {
+    opacity: 0.55;
+
+    cursor: wait;
+
+    transform: none;
+}
+
+
+/* =====================================================
+   Active timer section
+===================================================== */
+
+.timer-active {
+    display: none;
+
+    margin-top: 16px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid #f3f4f6;
+}
+
+
+.timer-panel.timer-running .timer-active {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+
+.timer-panel.timer-running .timer-custom {
+    display: none;
+}
+
+
+.timer-panel.timer-running .timer-presets {
+    display: none;
+}
+
+
+.timer-active-text {
+    color: #4b5563;
+
+    font-size: 12px;
+
+    font-weight: 600;
+}
+
+
+.timer-cancel-button {
+    flex-shrink: 0;
+
+    height: 38px;
+
+    border: none;
+
+    border-radius: 11px;
+
+    padding: 0 13px;
+
+    background: #fee2e2;
+
+    color: #991b1b;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    touch-action: manipulation;
+
+    transition:
+        transform 0.1s ease,
+        background 0.15s ease;
+}
+
+
+.timer-cancel-button:active {
+    transform: scale(0.96);
+}
+
+
+.timer-cancel-button:disabled {
+    opacity: 0.55;
+
+    cursor: wait;
+
+    transform: none;
+}
+
+
+/* =====================================================
+   Footer
+===================================================== */
+
+.footer {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 20px;
+
+    color: #9ca3af;
+
+    font-size: 11px;
+}
+
+
+.last-update {
+    color: #6b7280;
+}
+
+
+/* =====================================================
+   Small screens
+===================================================== */
+
+@media (max-width: 350px) {
+
+    .app {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+
+    .header h1 {
+        font-size: 19px;
+    }
+
+
+    .connection-status {
+        padding: 6px 8px;
+    }
+
+
+    .control-button {
+        min-height: 100px;
+    }
+
+
+    .timer-presets {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .timer-set-button {
+        padding: 0 11px;
+    }
+
+}
