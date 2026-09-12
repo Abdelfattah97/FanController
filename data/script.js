@@ -8,85 +8,118 @@
 // DOM elements
 // =====================================================
 
-const fanStateElement =
-    document.getElementById("fanState");
+let fanStateElement;
+let statusDescriptionElement;
+let connectionStatusElement;
+let connectionTextElement;
+let lastUpdateElement;
+let controlButtons;
+let muteButton;
+let muteIcon;
+let timerButton;
+let timerValueElement;
+let timerPanel;
+let timerPanelDescription;
+let timerActiveText;
+let timerMinutesInput;
+let timerSetButton;
+let timerCancelButton;
 
+function cacheDomElements() {
 
-const statusDescriptionElement =
-    document.getElementById("statusDescription");
+    fanStateElement =
+        document.getElementById("fanState");
 
+    statusDescriptionElement =
+        document.getElementById("statusDescription");
 
-const connectionStatusElement =
-    document.getElementById("connectionStatus");
+    connectionStatusElement =
+        document.getElementById("connectionStatus");
 
+    connectionTextElement =
+        document.getElementById("connectionText");
 
-const connectionTextElement =
-    document.getElementById("connectionText");
+    lastUpdateElement =
+        document.getElementById("lastUpdate");
 
+    controlButtons =
+        document.querySelectorAll(
+            ".control-button[data-state]"
+        );
 
-const lastUpdateElement =
-    document.getElementById("lastUpdate");
+    muteButton =
+        document.getElementById("muteButton");
 
+    muteIcon =
+        document.getElementById("muteIcon");
 
-const controlButtons =
-    document.querySelectorAll(
-        ".control-button[data-state]"
-    );
+    timerButton =
+        document.getElementById("timerButton");
 
+    timerValueElement =
+        document.getElementById("timerValue");
 
-const muteButton =
-    document.getElementById("muteButton");
+    timerPanel =
+        document.getElementById("timerPanel");
 
+    timerPanelDescription =
+        document.getElementById(
+            "timerPanelDescription"
+        );
 
-const muteIcon =
-    document.getElementById("muteIcon");
+    timerActiveText =
+        document.getElementById(
+            "timerActiveText"
+        );
 
+    timerMinutesInput =
+        document.getElementById(
+            "timerMinutes"
+        );
 
-const timerButton =
-    document.getElementById("timerButton");
+    timerSetButton =
+        document.querySelector(
+            ".timer-set-button"
+        );
 
+    timerCancelButton =
+        document.querySelector(
+            ".timer-cancel-button"
+        );
+}
 
-const timerValueElement =
-    document.getElementById("timerValue");
-
-
-const timerPanel =
-    document.getElementById("timerPanel");
-
-
-const timerPanelDescription =
-    document.getElementById(
-        "timerPanelDescription"
-    );
-
-
-const timerActiveText =
-    document.getElementById(
-        "timerActiveText"
-    );
-
-
-const timerMinutesInput =
-    document.getElementById(
-        "timerMinutes"
-    );
-
-
-const timerSetButton =
-    document.querySelector(
-        ".timer-set-button"
-    );
-
-
-const timerCancelButton =
-    document.querySelector(
-        ".timer-cancel-button"
-    );
 
 
 // =====================================================
-// Constants
+// Fetch with timeout
 // =====================================================
+// Without this, a slow/broken mDNS resolution or a dead
+// ESP8266 can leave fetch() hanging far longer than the
+// UI should ever wait before falling back to "Offline".
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 4000) {
+
+    const controller = new AbortController();
+
+    const timeoutId = setTimeout(
+        () => controller.abort(),
+        timeoutMs
+    );
+
+    try {
+
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+
+    } finally {
+
+        clearTimeout(timeoutId);
+
+    }
+}
+
 
 // =====================================================
 // Update fan state on screen
@@ -291,6 +324,32 @@ function getDescription(state) {
 
 
 // =====================================================
+// Map a speed API segment to its state name
+// =====================================================
+// Used for optimistic UI updates right after a
+// successful POST, before the WebSocket confirms it.
+
+function speedToStateName(speed) {
+
+    switch (speed) {
+
+        case "speed1":
+            return "SPEED1";
+
+        case "speed2":
+            return "SPEED2";
+
+        case "speed3":
+            return "SPEED3";
+
+        case "off":
+        default:
+            return "OFF";
+    }
+}
+
+
+// =====================================================
 // Connection status
 // =====================================================
 
@@ -349,8 +408,11 @@ function updateLastUpdate() {
 function applyStatus(data) {
 
     updateFanState(data.state);
+
     updateMuteState(data.mute);
+
     updateTimerState(data.timer);
+
     updateLastUpdate();
 }
 
@@ -361,38 +423,122 @@ function applyStatus(data) {
 
 let statusSocket;
 
+let reconnectAttempts = 0;
+
+let reconnectTimeoutId = null;
+
+const MAX_RECONNECT_DELAY_MS = 10000;
+
+
+function getReconnectDelay() {
+
+    // Simple capped backoff: 2s, 4s, 6s, 8s, 10s, 10s...
+
+    const delay =
+        2000 * (reconnectAttempts + 1);
+
+    return Math.min(
+        delay,
+        MAX_RECONNECT_DELAY_MS
+    );
+}
+
+
 function connectStatusSocket() {
 
-    statusSocket = new WebSocket(
-        "ws://" + location.hostname + ":81/"
-    );
+    // Avoid piling up duplicate sockets if a
+    // reconnect is triggered while one is still open.
 
-    statusSocket.onopen = function () {
-        setOnline();
-    };
+    if (
+        statusSocket &&
+        (
+            statusSocket.readyState === WebSocket.OPEN ||
+            statusSocket.readyState === WebSocket.CONNECTING
+        )
+    ) {
 
-    statusSocket.onmessage = function (event) {
+        return;
+    }
 
-        try {
-            const message = JSON.parse(event.data);
+    if (reconnectTimeoutId) {
 
-            if (message.type === "status") {
-                applyStatus(message.data);
-                setOnline();
+        clearTimeout(reconnectTimeoutId);
+
+        reconnectTimeoutId = null;
+    }
+
+
+    statusSocket =
+        new WebSocket(getBaseWsUrl());
+
+
+    statusSocket.onopen =
+        function () {
+
+            reconnectAttempts = 0;
+
+            setOnline();
+
+        };
+
+
+    statusSocket.onmessage =
+        function (event) {
+
+            try {
+
+                const message =
+                    JSON.parse(event.data);
+
+
+                if (
+                    message.type === "status"
+                ) {
+
+                    applyStatus(
+                        message.data
+                    );
+
+
+                    setOnline();
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Invalid status message:",
+                    error
+                );
+
             }
-        } catch (error) {
-            console.error("Invalid status message:", error);
-        }
-    };
 
-    statusSocket.onclose = function () {
-        setOffline();
-        setTimeout(connectStatusSocket, 2000);
-    };
+        };
 
-    statusSocket.onerror = function () {
-        statusSocket.close();
-    };
+
+    statusSocket.onclose =
+        function () {
+
+            setOffline();
+
+            const delay = getReconnectDelay();
+
+            reconnectAttempts++;
+
+            reconnectTimeoutId = setTimeout(
+                connectStatusSocket,
+                delay
+            );
+
+        };
+
+
+    statusSocket.onerror =
+        function () {
+
+            statusSocket.close();
+
+        };
 }
 
 
@@ -405,12 +551,12 @@ async function refreshStatus() {
     try {
 
         const response =
-            await fetch(
-                "/api/status",
-                {
-                    method: "GET",
-                    cache: "no-store"
-                }
+            await fetchWithTimeout(
+                getBaseUrl() +
+                "/api/status", {
+                method: "GET",
+                cache: "no-store"
+            }
             );
 
 
@@ -419,25 +565,19 @@ async function refreshStatus() {
             throw new Error(
                 "HTTP " + response.status
             );
+
         }
 
 
         const data =
             await response.json();
 
-
-        // API is the single source of truth for the initial UI state.
         applyStatus(data);
 
 
         setOnline();
 
-
-        updateLastUpdate();
-
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Status update failed:",
@@ -446,6 +586,7 @@ async function refreshStatus() {
 
 
         setOffline();
+
     }
 }
 
@@ -468,11 +609,12 @@ async function setFanSpeed(speed) {
     try {
 
         const response =
-            await fetch(
-                "/api/fan/" + speed,
-                {
-                    method: "POST"
-                }
+            await fetchWithTimeout(
+                getBaseUrl() +
+                "/api/fan/" +
+                speed, {
+                method: "POST"
+            }
             );
 
 
@@ -481,12 +623,22 @@ async function setFanSpeed(speed) {
             throw new Error(
                 "HTTP " + response.status
             );
+
         }
 
 
-    }
+        // Optimistic update: reflect the change
+        // immediately instead of waiting for the
+        // WebSocket broadcast to round-trip back.
 
-    catch (error) {
+        updateFanState(
+            speedToStateName(speed)
+        );
+
+
+        setOnline();
+
+    } catch (error) {
 
         console.error(
             "Fan command failed:",
@@ -496,9 +648,7 @@ async function setFanSpeed(speed) {
 
         setOffline();
 
-    }
-
-    finally {
+    } finally {
 
         // Enable fan buttons again
 
@@ -529,9 +679,11 @@ async function toggleMute() {
     // Select API endpoint
 
     const endpoint =
-        isMuted
-            ? "/api/beep/unmute"
-            : "/api/beep/mute";
+        isMuted ?
+            getBaseUrl() +
+            "/api/beep/unmute" :
+            getBaseUrl() +
+            "/api/beep/mute";
 
 
     // Disable mute button
@@ -542,11 +694,10 @@ async function toggleMute() {
     try {
 
         const response =
-            await fetch(
-                endpoint,
-                {
-                    method: "POST"
-                }
+            await fetchWithTimeout(
+                endpoint, {
+                method: "POST"
+            }
             );
 
 
@@ -555,12 +706,19 @@ async function toggleMute() {
             throw new Error(
                 "HTTP " + response.status
             );
+
         }
 
 
-    }
+        // Optimistic update: flip immediately rather
+        // than waiting on the WebSocket to confirm.
 
-    catch (error) {
+        updateMuteState(!isMuted);
+
+
+        setOnline();
+
+    } catch (error) {
 
         console.error(
             "Mute command failed:",
@@ -570,9 +728,7 @@ async function toggleMute() {
 
         setOffline();
 
-    }
-
-    finally {
+    } finally {
 
         // Enable mute button again
 
@@ -648,6 +804,9 @@ function closeTimerPanel() {
 // Set custom timer
 // =====================================================
 
+const MAX_TIMER_MINUTES = 1440; // 24 hours, sanity cap
+
+
 function setCustomTimer() {
 
     const minutes =
@@ -658,7 +817,8 @@ function setCustomTimer() {
 
     if (
         !Number.isInteger(minutes) ||
-        minutes <= 0
+        minutes <= 0 ||
+        minutes > MAX_TIMER_MINUTES
     ) {
 
         timerMinutesInput.focus();
@@ -685,12 +845,12 @@ async function setFanOffTimer(minutes) {
     try {
 
         const response =
-            await fetch(
+            await fetchWithTimeout(
+                getBaseUrl() +
                 "/api/fan/timer/set?minutes=" +
-                minutes,
-                {
-                    method: "POST"
-                }
+                minutes, {
+                method: "POST"
+            }
             );
 
 
@@ -699,6 +859,7 @@ async function setFanOffTimer(minutes) {
             throw new Error(
                 "HTTP " + response.status
             );
+
         }
 
 
@@ -707,12 +868,20 @@ async function setFanOffTimer(minutes) {
         timerMinutesInput.value = "";
 
 
+        // Optimistic update so the panel reflects the
+        // new timer immediately rather than waiting on
+        // the next WebSocket broadcast.
+
+        updateTimerState(minutes);
+
+
+        setOnline();
+
+
         // Keep panel open so the
         // user can see the active timer
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Timer command failed:",
@@ -722,9 +891,7 @@ async function setFanOffTimer(minutes) {
 
         setOffline();
 
-    }
-
-    finally {
+    } finally {
 
         timerSetButton.disabled = false;
 
@@ -746,11 +913,11 @@ async function cancelFanOffTimer() {
     try {
 
         const response =
-            await fetch(
-                "/api/fan/timer/cancel",
-                {
-                    method: "POST"
-                }
+            await fetchWithTimeout(
+                getBaseUrl() +
+                "/api/fan/timer/cancel", {
+                method: "POST"
+            }
             );
 
 
@@ -759,12 +926,18 @@ async function cancelFanOffTimer() {
             throw new Error(
                 "HTTP " + response.status
             );
+
         }
 
 
-    }
+        // Optimistic update
 
-    catch (error) {
+        updateTimerState(null);
+
+
+        setOnline();
+
+    } catch (error) {
 
         console.error(
             "Timer cancel failed:",
@@ -774,9 +947,7 @@ async function cancelFanOffTimer() {
 
         setOffline();
 
-    }
-
-    finally {
+    } finally {
 
         timerCancelButton.disabled = false;
 
@@ -785,8 +956,72 @@ async function cancelFanOffTimer() {
 
 
 // =====================================================
-// Initial status
+// Reconnect / refresh when the WebView becomes visible
+// again (e.g. app resumed from background). Android may
+// have throttled or killed the socket while backgrounded.
 // =====================================================
 
-refreshStatus();
-connectStatusSocket();
+function handleVisibilityChange() {
+
+    if (document.visibilityState !== "visible") {
+
+        return;
+    }
+
+
+    if (
+        !statusSocket ||
+        statusSocket.readyState === WebSocket.CLOSED ||
+        statusSocket.readyState === WebSocket.CLOSING
+    ) {
+
+        connectStatusSocket();
+    }
+
+    refreshStatus();
+}
+
+
+// =====================================================
+// Startup
+// =====================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    cacheDomElements();
+
+
+    const fanUrlElement =
+        document.getElementById("fanUrl");
+
+    if (fanUrlElement) {
+
+        fanUrlElement.textContent =
+            `(${getBaseUrl()})`;
+    }
+
+
+    document.addEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+    );
+
+
+    // Start the WebSocket first; refreshStatus() only
+    // applies its result if the socket hasn't already
+    // delivered fresher state (see initialStateReceived).
+
+    connectStatusSocket();
+
+    refreshStatus();
+
+});
+
+function getBaseUrl() {
+    return window.getFanBaseUrl
+        ? window.getFanBaseUrl()
+        : window.location.origin;
+}
+function getBaseWsUrl() {
+    return `ws://${getBaseUrl().replace(/^http:\/\//, "")}:81/`;
+}
