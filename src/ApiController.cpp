@@ -75,11 +75,7 @@ void ApiController::handleBeepMute()
 {
 
     fanService.mute(true);
-
-    server.send(
-        200,
-        "application/json",
-        "{\"mute\":true}");
+    handleFanStatus();
 }
 
 // =========================
@@ -91,10 +87,7 @@ void ApiController::handleBeepUnmute()
 
     fanService.mute(false);
 
-    server.send(
-        200,
-        "application/json",
-        "{\"mute\":false}");
+    handleFanStatus();
 }
 
 // =========================
@@ -106,28 +99,21 @@ void ApiController::handleWifiDisconnect()
 
     fanService.setWifiEnabled(false);
 
-    server.send(
-        200,
-        "application/json",
-        "{\"wifi\":false}");
+    handleFanStatus();
 }
 
 void ApiController::handleSetFanOffTimer(int mins)
 {
     fanService.setTimer(mins);
-    server.send(
-        200,
-        "application/json",
-        fanService.getTimerStatusJson());
+
+    handleFanStatus();
 }
 
 void ApiController::handleCancelFanOffTimer()
 {
     fanService.cancelTimer();
-    server.send(
-        200,
-        "application/json",
-        fanService.getTimerStatusJson());
+
+    handleFanStatus();
 }
 
 #ifdef DEBUG_FEATURE
@@ -168,10 +154,7 @@ void ApiController::handleWificonnect()
 
     fanService.setWifiEnabled(true);
 
-    server.send(
-        200,
-        "application/json",
-        "{\"wifi\":true}");
+    handleFanStatus();
 }
 
 // =========================
