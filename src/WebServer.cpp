@@ -46,6 +46,9 @@ void WebServer::setupMDNS()
 void WebServer::setupWebServer()
 {
 
+    // Enable CORS for all requests
+    server.enableCORS(true);
+
     // =========================
     // Web page
     // =========================
