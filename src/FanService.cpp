@@ -24,6 +24,10 @@ void FanService::update()
 void FanService::setFanState(int state)
 {
     Fan::switchState(state);
+    if (state != STATE_OFF)
+    {
+        setDefaultTimer(720); // Set default timer to 12 hours (720 minutes) when fan is turned on
+    }
     broadcastStatus();
 }
 
@@ -106,6 +110,14 @@ const char *FanService::getFanStateString() const
     case STATE_OFF:
     default:
         return "OFF";
+    }
+}
+
+void FanService::setDefaultTimer(unsigned int minutes)
+{
+    if (!Timer::isFanOffTimerActive())
+    {
+        Timer::setFanOffTimer(minutes);
     }
 }
 

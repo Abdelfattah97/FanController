@@ -25,6 +25,7 @@ private:
     StateBroadcaster &stateBroadcaster;
 
     const char *getFanStateString() const;
+    void setDefaultTimer(unsigned int minutes);
     void broadcastStatus();
 };
 
